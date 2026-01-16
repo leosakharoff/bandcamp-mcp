@@ -6,6 +6,3 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python -m src.server_remote
-    envVars:
-      - key: PORT
-        value: 8000
