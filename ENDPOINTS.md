@@ -2,15 +2,23 @@
 
 **Server URL:** `https://bandcamp-mcp.onrender.com/sse`
 
+---
+
 ## Endpoints
 
 ### bandcamp_search
 Søg på Bandcamp.
 
+| Argument | Type | Required | Default | Beskrivelse |
+|----------|------|----------|---------|-------------|
+| `query` | string | ✅ | - | Søgeord (kunstner, album, etc.) |
+| `item_type` | string | ❌ | "all" | `all`, `album`, `artist`, `track`, `label` |
+| `page` | integer | ❌ | 1 | Sidetal |
+
 ```json
 {
   "query": "Aphex Twin",
-  "item_type": "all|album|artist|track|label",
+  "item_type": "artist",
   "page": 1
 }
 ```
@@ -24,9 +32,13 @@ Søg på Bandcamp.
 ### bandcamp_get_album
 Fuld album info fra URL.
 
+| Argument | Type | Required | Default | Beskrivelse |
+|----------|------|----------|---------|-------------|
+| `url` | string | ✅ | - | Bandcamp album URL |
+
 ```json
 {
-  "url": "https://artist.bandcamp.com/album/album-name"
+  "url": "https://aphextwin.bandcamp.com/album/selected-ambient-works"
 }
 ```
 
@@ -44,15 +56,19 @@ Fuld album info fra URL.
 ### bandcamp_get_artist
 Kunstner/label side.
 
+| Argument | Type | Required | Default | Beskrivelse |
+|----------|------|----------|---------|-------------|
+| `url` | string | ✅ | - | Bandcamp artist URL |
+
 ```json
 {
-  "url": "https://artist.bandcamp.com"
+  "url": "https://aphextwin.bandcamp.com"
 }
 ```
 
 **Returnerer:**
 - name, location, bio
-- discography[] med title, url
+- discography[] med title, url, image
 - links[] (sociale medier, website)
 
 **Brug til:** Se hele diskografi, find lokation (geografisk kontekst).
@@ -61,6 +77,10 @@ Kunstner/label side.
 
 ### bandcamp_get_track
 Enkelt track info.
+
+| Argument | Type | Required | Default | Beskrivelse |
+|----------|------|----------|---------|-------------|
+| `url` | string | ✅ | - | Bandcamp track URL |
 
 ```json
 {
@@ -72,7 +92,7 @@ Enkelt track info.
 - title, artist, duration
 - album, album_url
 - lyrics (hvis tilgængelig!)
-- tags[], price
+- tags[], price, currency
 
 **Brug til:** Lyrics research, find hvilket album track er fra.
 
@@ -81,18 +101,21 @@ Enkelt track info.
 ### bandcamp_browse_tag
 Browse musik efter tag/genre.
 
+| Argument | Type | Required | Default | Beskrivelse |
+|----------|------|----------|---------|-------------|
+| `tag` | string | ✅ | - | Tag/genre at browse |
+| `sort` | string | ❌ | "pop" | `pop` (populære), `new` (nyeste), `rec` (anbefalede) |
+| `page` | integer | ❌ | 1 | Sidetal |
+
 ```json
 {
-  "tag": "ambient",
-  "sort": "pop|new|rec",
+  "tag": "dark-ambient",
+  "sort": "new",
   "page": 1
 }
 ```
 
-**Sort options:**
-- `pop` = Populære/klassikere
-- `new` = Nyeste udgivelser
-- `rec` = Bandcamp's anbefalinger
+**Brug til:** DISCOVERY! Find nye kunstnere i specifikke nicher.
 
 **Populære tags:**
 ```
@@ -100,29 +123,30 @@ ambient, electronic, synthwave, vaporwave, lofi,
 techno, house, drone, noise, shoegaze, post-punk,
 darkwave, coldwave, krautrock, kosmische,
 experimental, avant-garde, musique-concrete,
-dark-ambient, field-recordings, fourth-world
+dark-ambient, field-recordings, fourth-world,
+lo-fi-hip-hop, chiptune, minimal, dub-techno
 ```
-
-**Brug til:** DISCOVERY! Find nye kunstnere i specifikke nicher.
 
 ---
 
 ### bandcamp_discover
 Bandcamp's discovery side.
 
+| Argument | Type | Required | Default | Beskrivelse |
+|----------|------|----------|---------|-------------|
+| `genre` | string | ❌ | - | Hovedgenre (electronic, rock, ambient, jazz) |
+| `subgenre` | string | ❌ | - | Mere specifik genre |
+| `sort` | string | ❌ | "top" | `top` (bestsellers), `new` (nyeste), `rec` (anbefalede) |
+| `format` | string | ❌ | "all" | `all`, `vinyl`, `cd`, `cassette` |
+
 ```json
 {
   "genre": "electronic",
   "subgenre": "ambient",
-  "sort": "top|new|rec",
-  "format": "all|vinyl|cd|cassette"
+  "sort": "new",
+  "format": "vinyl"
 }
 ```
-
-**Sort options:**
-- `top` = Bestsellers
-- `new` = Nyeste
-- `rec` = Anbefalede
 
 **Brug til:** Bred discovery, filter på fysisk format (vinyl collectors!).
 
@@ -132,30 +156,35 @@ Bandcamp's discovery side.
 
 | Discogs Style | Bandcamp Tags |
 |--------------|---------------|
-| Ambient | ambient, dark-ambient, drone |
-| Krautrock | krautrock, motorik, kosmische |
-| Post-Punk | post-punk, coldwave, darkwave |
-| Synth-pop | synthpop, synthwave |
-| Industrial | industrial, power-electronics, noise |
-| Minimal | minimal, minimal-wave |
-| Experimental | experimental, avant-garde |
-| IDM | idm, glitch, braindance |
+| Ambient | `ambient`, `dark-ambient`, `drone` |
+| Krautrock | `krautrock`, `motorik`, `kosmische` |
+| Post-Punk | `post-punk`, `coldwave`, `darkwave` |
+| Synth-pop | `synthpop`, `synthwave` |
+| Industrial | `industrial`, `power-electronics`, `noise` |
+| Minimal | `minimal`, `minimal-wave` |
+| Experimental | `experimental`, `avant-garde` |
+| IDM | `idm`, `glitch`, `braindance` |
+| Dub | `dub`, `dub-techno` |
+| New Age | `new-age`, `fourth-world`, `healing` |
 
 ---
 
 ## Prioriteret Workflow
 
+```
 1. Brug Discogs styles → map til Bandcamp tags
-2. `bandcamp_browse_tag(sort="pop")` → Klassikere i genren
-3. `bandcamp_browse_tag(sort="new")` → Nyeste i genren
-4. `bandcamp_get_album` → Dyb research på interessante fund
-5. `bandcamp_get_artist` → Se diskografi, find mere
+2. bandcamp_browse_tag(tag, sort="pop") → Klassikere i genren
+3. bandcamp_browse_tag(tag, sort="new") → Nyeste i genren
+4. bandcamp_get_album(url) → Dyb research på interessante fund
+5. bandcamp_get_artist(url) → Se diskografi, find mere
+```
 
 ---
 
 ## Tips
 
-- Bandcamp tags er mere granulære end Discogs
-- "Supported by" sektion på albums = peer validation
-- Læs album descriptions - kunstnere forklarer ofte deres inspirationer
-- Location på artist page = geografisk scene-kontekst
+- **Tags** er mere granulære end Discogs styles
+- **Location** på artist page = geografisk scene-kontekst
+- **About/credits** indeholder ofte kunstnerens inspirationer
+- **"Supported by"** = peer validation fra andre kunstnere
+- Kombiner flere tags med bindestreg: `lo-fi`, `post-rock`, `dark-ambient`
